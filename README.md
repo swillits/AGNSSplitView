@@ -1,0 +1,4 @@
+AGNSSplitView
+=============
+
+Simple NSSplitView additions.
