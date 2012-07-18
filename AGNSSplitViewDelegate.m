@@ -19,14 +19,26 @@
 	CGFloat mMaxSize;
 	BOOL mCanCollapse;
 }
-@property (readwrite, assign) CGFloat minSize;
-@property (readwrite, assign) CGFloat maxSize;
+@property (nonatomic, readwrite, assign) CGFloat minSize;
+@property (nonatomic, readwrite, assign) CGFloat maxSize;
 @property (readwrite, assign) BOOL canCollapse;
+@end
+
+@interface AGNSSplitViewDelegateSubviewInfo()
+@property (readwrite, assign) BOOL constrainSize;
 @end
 
 @implementation AGNSSplitViewDelegateSubviewInfo
 @synthesize minSize = mMinSize;
 @synthesize maxSize = mMaxSize;
+- (void)setMinSize:(CGFloat)minSize {
+    mMinSize = minSize;
+    self.constrainSize = YES;
+}
+- (void)setMaxSize:(CGFloat)maxSize {
+    mMaxSize = maxSize;
+    self.constrainSize = YES;
+}
 @synthesize canCollapse = mCanCollapse;
 @end
 
@@ -138,7 +150,7 @@
 - (void)setPriorityIndexes:(NSArray *)priorityIndexes
 {
 	NSAssert([priorityIndexes count] == self.splitView.subviews.count,
-			@"Priority indexes must equal number of splitview subvies.");
+             @"Priority indexes must equal number of splitview subvies.");
 	
 	[mPriorityIndexes autorelease];
 	mPriorityIndexes = [priorityIndexes copy];
@@ -168,14 +180,15 @@
 
 - (void)setCollapseSubviewAtIndex:(NSUInteger)viewIndex forDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
 {
-	[mViewToCollapseByDivider setInteger:viewIndex forKey:[NSNumber numberWithInteger:dividerIndex]];
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+    [mViewToCollapseByDivider setInteger:viewIndex forKey:[[NSNumber numberWithInteger:dividerIndex] stringValue]];
 }
 
 
 - (NSUInteger)subviewIndexToCollapseForDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
 {
 	if ([mViewToCollapseByDivider objectForKey:[NSNumber numberWithInteger:dividerIndex]]) {
-		return [mViewToCollapseByDivider integerForKey:[NSNumber numberWithInteger:dividerIndex]];
+		return [mViewToCollapseByDivider integerForKey:[[NSNumber numberWithInteger:dividerIndex] stringValue]];
 	}
 	
 	return NSNotFound;
@@ -190,7 +203,11 @@
 
 - (CGFloat)splitView:(NSSplitView *)splitView constrainMinCoordinate:(CGFloat)proposedMin ofSubviewAt:(NSInteger)viewIndex
 {
-	NSRect subviewFrame = Subview(viewIndex).frame;
+	AGNSSplitViewDelegateSubviewInfo *info = SubviewInfo(viewIndex);
+    if (!info.constrainSize) {
+        return proposedMin;
+    }
+    NSRect subviewFrame = Subview(viewIndex).frame;
 	CGFloat frameOrigin;
 	
 	if (splitView.isVertical) {
@@ -199,15 +216,22 @@
 		frameOrigin = subviewFrame.origin.y;
 	}
 	
-	return frameOrigin + SubviewInfo(viewIndex).minSize;
+	return frameOrigin + info.minSize;
 }
 
 
 
 - (CGFloat)splitView:(NSSplitView *)splitView constrainMaxCoordinate:(CGFloat)proposedMax ofSubviewAt:(NSInteger)viewIndex
 {
-	CGFloat shrinkMinSize = SubviewInfo(viewIndex + 1).minSize;
-	CGFloat growMaxSize = SubviewInfo(viewIndex).maxSize;
+    AGNSSplitViewDelegateSubviewInfo *infoTwo = SubviewInfo(viewIndex + 1);
+    AGNSSplitViewDelegateSubviewInfo *infoOne = SubviewInfo(viewIndex);
+    
+    if (!infoOne.constrainSize || !infoTwo.constrainSize) {
+        return proposedMax;
+    }
+    
+	CGFloat shrinkMinSize = infoTwo.minSize;
+	CGFloat growMaxSize = infoOne.maxSize;
 	NSView * growingSubview = Subview(viewIndex);
 	NSView * shrinkingSubview = Subview(viewIndex + 1);
 	CGFloat maxCoordLimitedByShrinkMinSize;
@@ -232,7 +256,7 @@
 		case AGNSSplitViewUniformResizingStyle:
 			[self _resizeUniform:oldSize];
 			break;
-		
+            
 		case AGNSSplitViewProportionalResizingStyle:
 			[self _resizeProportional:oldSize];
 			break;
