@@ -33,9 +33,9 @@ typedef NSUInteger AGNSSplitViewResizingStyle;
 	NSMutableDictionary * mViewToCollapseByDivider;
 }
 
-@property (readwrite, retain) NSSplitView * splitView;
-@property (readwrite, assign) AGNSSplitViewResizingStyle resizingStyle;
-@property (readwrite, copy) NSArray * priorityIndexes;
+@property (nonatomic, readwrite, retain) NSSplitView * splitView;
+@property (nonatomic, readwrite, assign) AGNSSplitViewResizingStyle resizingStyle;
+@property (nonatomic, readwrite, copy) NSArray * priorityIndexes;
 
 - (id)initWithSplitView:(NSSplitView *)splitView;
 

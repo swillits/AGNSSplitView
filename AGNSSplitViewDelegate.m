@@ -14,21 +14,29 @@
 #define Subview(index) ((NSView *)[self.splitView.subviews objectAtIndex:index])
 
 
+
 @interface AGNSSplitViewDelegateSubviewInfo : NSObject {
 	CGFloat mMinSize;
 	CGFloat mMaxSize;
 	BOOL mCanCollapse;
 }
-@property (readwrite, assign) CGFloat minSize;
-@property (readwrite, assign) CGFloat maxSize;
-@property (readwrite, assign) BOOL canCollapse;
+@property (nonatomic, readwrite, assign) CGFloat minSize;
+@property (nonatomic, readwrite, assign) CGFloat maxSize;
+@property (nonatomic, readwrite, assign) BOOL canCollapse;
+@property (nonatomic, readonly) BOOL constrainSize;
 @end
 
 @implementation AGNSSplitViewDelegateSubviewInfo
 @synthesize minSize = mMinSize;
 @synthesize maxSize = mMaxSize;
 @synthesize canCollapse = mCanCollapse;
+
+- (BOOL)constrainSize {
+	return ((mMinSize > 0) || (mMaxSize > 0));
+}
+
 @end
+
 
 
 
@@ -81,7 +89,6 @@
 #pragma mark Properties
 
 @synthesize resizingStyle = mResizingStyle;
-@synthesize splitView = mSplitView;
 
 
 - (void)setSplitView:(NSSplitView *)splitView;
@@ -135,7 +142,8 @@
 }
 
 
-- (void)setPriorityIndexes:(NSArray *)priorityIndexes
+
+- (void)setPriorityIndexes:(NSArray *)priorityIndexes;
 {
 	NSAssert([priorityIndexes count] == self.splitView.subviews.count,
 			@"Priority indexes must equal number of splitview subvies.");
@@ -188,8 +196,11 @@
 #pragma mark -
 #pragma mark Delegate Methods
 
-- (CGFloat)splitView:(NSSplitView *)splitView constrainMinCoordinate:(CGFloat)proposedMin ofSubviewAt:(NSInteger)viewIndex
+- (CGFloat)splitView:(NSSplitView *)splitView constrainMinCoordinate:(CGFloat)proposedMin ofSubviewAt:(NSInteger)viewIndex;
 {
+	AGNSSplitViewDelegateSubviewInfo * info = SubviewInfo(viewIndex);
+	if (!info.constrainSize) return proposedMin;
+	
 	NSRect subviewFrame = Subview(viewIndex).frame;
 	CGFloat frameOrigin;
 	
@@ -199,15 +210,22 @@
 		frameOrigin = subviewFrame.origin.y;
 	}
 	
-	return frameOrigin + SubviewInfo(viewIndex).minSize;
+	return frameOrigin + info.minSize;
 }
 
 
 
-- (CGFloat)splitView:(NSSplitView *)splitView constrainMaxCoordinate:(CGFloat)proposedMax ofSubviewAt:(NSInteger)viewIndex
+- (CGFloat)splitView:(NSSplitView *)splitView constrainMaxCoordinate:(CGFloat)proposedMax ofSubviewAt:(NSInteger)viewIndex;
 {
-	CGFloat shrinkMinSize = SubviewInfo(viewIndex + 1).minSize;
-	CGFloat growMaxSize = SubviewInfo(viewIndex).maxSize;
+	AGNSSplitViewDelegateSubviewInfo * infoTwo = SubviewInfo(viewIndex + 1);
+	AGNSSplitViewDelegateSubviewInfo * infoOne = SubviewInfo(viewIndex);
+	
+	if (!infoOne.constrainSize || !infoTwo.constrainSize) {
+		return proposedMax;
+	}
+	
+	CGFloat shrinkMinSize = infoTwo.minSize;
+	CGFloat growMaxSize = infoOne.maxSize;
 	NSView * growingSubview = Subview(viewIndex);
 	NSView * shrinkingSubview = Subview(viewIndex + 1);
 	CGFloat maxCoordLimitedByShrinkMinSize;
@@ -226,13 +244,13 @@
 
 
 
-- (void)splitView:(NSSplitView *)splitView resizeSubviewsWithOldSize:(NSSize)oldSize
+- (void)splitView:(NSSplitView *)splitView resizeSubviewsWithOldSize:(NSSize)oldSize;
 {
 	switch (self.resizingStyle) {
 		case AGNSSplitViewUniformResizingStyle:
 			[self _resizeUniform:oldSize];
 			break;
-		
+			
 		case AGNSSplitViewProportionalResizingStyle:
 			[self _resizeProportional:oldSize];
 			break;
