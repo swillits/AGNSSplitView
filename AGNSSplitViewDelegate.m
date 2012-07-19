@@ -497,13 +497,15 @@
 		CGFloat newSize = 0;
 		if (max == 0.0) max = CGFLOAT_MAX;
 		
-		newSize = MAX(min, MIN(max, oldSize + delta));
-		delta -= (newSize - oldSize);
-		
-		if (splitView.isVertical) {
-			[subview setFrameSize:NSMakeSize(newSize, splitView.bounds.size.height)];
-		} else {
-			[subview setFrameSize:NSMakeSize(splitView.bounds.size.width, newSize)];
+		if (![splitView isSubviewCollapsed:subview]) {
+			newSize = MAX(min, MIN(max, oldSize + delta));
+			delta -= (newSize - oldSize);
+			
+			if (splitView.isVertical) {
+				[subview setFrameSize:NSMakeSize(newSize, splitView.bounds.size.height)];
+			} else {
+				[subview setFrameSize:NSMakeSize(splitView.bounds.size.width, newSize)];
+			}
 		}
 	}
 	
@@ -518,21 +520,23 @@
 	CGFloat offset = 0;
 	
 	for (NSView * subview in splitView.subviews) {
-		NSRect viewFrame = subview.frame;
-		
-		if (splitView.isVertical) {
-			viewFrame.origin.x = offset;
-			viewFrame.origin.y = 0;
-			viewFrame.size.height = splitView.bounds.size.height;
+		if (![splitView isSubviewCollapsed:subview]) {
+			NSRect viewFrame = subview.frame;
 			
-		} else {
-			viewFrame.origin.x = 0;
-			viewFrame.origin.y = offset;
-			viewFrame.size.width = splitView.bounds.size.width;
+			if (splitView.isVertical) {
+				viewFrame.origin.x = offset;
+				viewFrame.origin.y = 0;
+				viewFrame.size.height = splitView.bounds.size.height;
+				
+			} else {
+				viewFrame.origin.x = 0;
+				viewFrame.origin.y = offset;
+				viewFrame.size.width = splitView.bounds.size.width;
+			}
+			
+			[subview setFrame:viewFrame];
+			offset += viewFrame.size.width + splitView.dividerThickness;
 		}
-		
-		[subview setFrame:viewFrame];
-		offset += viewFrame.size.width + splitView.dividerThickness;
 	}
 }
 
