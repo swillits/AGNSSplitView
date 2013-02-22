@@ -176,14 +176,15 @@
 
 - (void)setCollapseSubviewAtIndex:(NSUInteger)viewIndex forDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
 {
-	[mViewToCollapseByDivider setInteger:viewIndex forKey:[NSNumber numberWithInteger:dividerIndex]];
+	[mViewToCollapseByDivider setObject:[NSNumber numberWithUnsignedInteger:viewIndex] forKey:[NSNumber numberWithUnsignedInteger:dividerIndex]];
 }
 
 
 - (NSUInteger)subviewIndexToCollapseForDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
 {
-	if ([mViewToCollapseByDivider objectForKey:[NSNumber numberWithInteger:dividerIndex]]) {
-		return [mViewToCollapseByDivider integerForKey:[NSNumber numberWithInteger:dividerIndex]];
+    NSNumber *obj = [mViewToCollapseByDivider objectForKey:[NSNumber numberWithUnsignedInteger:dividerIndex]];
+	if (obj) {
+		return [obj unsignedIntegerValue];
 	}
 	
 	return NSNotFound;
