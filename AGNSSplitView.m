@@ -11,6 +11,8 @@
 
 @implementation AGNSSplitView
 
+@synthesize drawBlock = mDrawBlock;
+
 - (id)initWithFrame:(NSRect)frame;
 {
 	if (!(self = [super initWithFrame:frame])) {
@@ -46,6 +48,7 @@
 - (void)dealloc;
 {
 	[mDividerColor release];
+	[mDrawBlock release];
 	[super dealloc];
 }
 
@@ -135,6 +138,11 @@
 
 - (void)drawDividerInRect:(NSRect)aRect
 {
+	if (mDrawBlock) {
+		mDrawBlock(aRect);
+		return;
+	}
+
 	if ([self drawsDivider]) {
 		
 		if ([self dividerStyle] == NSSplitViewDividerStyleThin) {
