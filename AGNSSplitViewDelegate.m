@@ -79,6 +79,8 @@
 	[mSplitView release];
 	[mSubviewInfos release];
 	[mViewToCollapseByDivider release];
+	[mEffectiveRectHandler release];
+	[mAdditionalEffectiveRectHandler release];
 	[super dealloc];
 }
 
@@ -89,6 +91,8 @@
 #pragma mark Properties
 
 @synthesize resizingStyle = mResizingStyle;
+@synthesize effectiveRectHandler = mEffectiveRectHandler;
+@synthesize additionalEffectiveRectHandler = mAdditionalEffectiveRectHandler;
 
 
 - (void)setSplitView:(NSSplitView *)splitView;
@@ -182,7 +186,7 @@
 
 - (NSUInteger)subviewIndexToCollapseForDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
 {
-    NSNumber *obj = [mViewToCollapseByDivider objectForKey:[NSNumber numberWithUnsignedInteger:dividerIndex]];
+    NSNumber * obj = [mViewToCollapseByDivider objectForKey:[NSNumber numberWithUnsignedInteger:dividerIndex]];
 	if (obj) {
 		return [obj unsignedIntegerValue];
 	}
@@ -221,10 +225,6 @@
 	AGNSSplitViewDelegateSubviewInfo * infoTwo = SubviewInfo(viewIndex + 1);
 	AGNSSplitViewDelegateSubviewInfo * infoOne = SubviewInfo(viewIndex);
 	
-	if (!infoOne.constrainSize || !infoTwo.constrainSize) {
-		return proposedMax;
-	}
-	
 	CGFloat shrinkMinSize = infoTwo.minSize;
 	CGFloat growMaxSize = infoOne.maxSize;
 	NSView * growingSubview = Subview(viewIndex);
@@ -233,11 +233,13 @@
 	CGFloat maxCoordLimitedByGrowMaxSize;
 	
 	if (splitView.isVertical) {
-		maxCoordLimitedByGrowMaxSize = (NSMinX(growingSubview.frame) + growMaxSize);
-		maxCoordLimitedByShrinkMinSize = (NSMaxX(growingSubview.frame) + (shrinkingSubview.frame.size.width - shrinkMinSize));
+		CGFloat maxCoordPossible       = MAX(NSMaxX(shrinkingSubview.frame), NSMaxX(growingSubview.frame)); // accounts for collapsed views
+		maxCoordLimitedByGrowMaxSize   = (growMaxSize > 0.0) ? (NSMinX(growingSubview.frame) + growMaxSize) : proposedMax;
+		maxCoordLimitedByShrinkMinSize = maxCoordPossible - shrinkMinSize;
 	} else {
-		maxCoordLimitedByGrowMaxSize   = (NSMinY(growingSubview.frame) + growMaxSize);
-		maxCoordLimitedByShrinkMinSize = (NSMaxY(growingSubview.frame) + (shrinkingSubview.frame.size.height - shrinkMinSize));
+		CGFloat maxCoordPossible       = MAX(NSMaxY(shrinkingSubview.frame), NSMaxY(growingSubview.frame)); // accounts for collapsed views
+		maxCoordLimitedByGrowMaxSize   = (growMaxSize > 0.0) ? (NSMinY(growingSubview.frame) + growMaxSize) : proposedMax;
+		maxCoordLimitedByShrinkMinSize = maxCoordPossible - shrinkMinSize;
 	}
 	
 	return MIN(maxCoordLimitedByGrowMaxSize, maxCoordLimitedByShrinkMinSize);
@@ -283,6 +285,27 @@
 }
 
 
+
+- (NSRect)splitView:(NSSplitView *)splitView effectiveRect:(NSRect)proposedEffectiveRect forDrawnRect:(NSRect)drawnRect ofDividerAtIndex:(NSInteger)dividerIndex;
+{
+	if (self.effectiveRectHandler) {
+		return self.effectiveRectHandler(dividerIndex, proposedEffectiveRect, drawnRect);
+	}
+	
+	return proposedEffectiveRect;
+}
+
+
+- (NSRect)splitView:(NSSplitView *)splitView additionalEffectiveRectOfDividerAtIndex:(NSInteger)dividerIndex;
+{
+	if (self.additionalEffectiveRectHandler) {
+		return self.additionalEffectiveRectHandler(dividerIndex);
+	}
+	
+	return NSZeroRect;
+}
+
+
 @end
 
 
@@ -325,6 +348,10 @@
 					canBeResized = NO;
 				}
 			}
+		}
+		
+		if ([self.splitView isSubviewCollapsed:subview]) {
+			canBeResized = NO;
 		}
 		
 		if (subviewCanBeResized) subviewCanBeResized[viewIndex] = canBeResized;
@@ -546,16 +573,20 @@
 				viewFrame.origin.x = offset;
 				viewFrame.origin.y = 0;
 				viewFrame.size.height = splitView.bounds.size.height;
+				offset += viewFrame.size.width;
 				
 			} else {
 				viewFrame.origin.x = 0;
 				viewFrame.origin.y = offset;
 				viewFrame.size.width = splitView.bounds.size.width;
+				offset += viewFrame.size.height;
 			}
 			
 			[subview setFrame:viewFrame];
-			offset += viewFrame.size.width + splitView.dividerThickness;
 		}
+		
+		
+		offset += splitView.dividerThickness;
 	}
 }
 

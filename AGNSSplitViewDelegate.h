@@ -23,6 +23,11 @@ enum {
 typedef NSUInteger AGNSSplitViewResizingStyle;
 
 
+typedef NSRect (^AGNSSplitViewEffectiveRectHandler)(NSInteger dividerIndex, NSRect proposedEffectiveRect, NSRect drawnRect);
+typedef NSRect (^AGNSSplitViewAdditionalEffectiveRectHandler)(NSInteger dividerIndex);
+
+
+
 
 @interface AGNSSplitViewDelegate : NSObject <NSSplitViewDelegate>
 {
@@ -31,11 +36,16 @@ typedef NSUInteger AGNSSplitViewResizingStyle;
 	NSMutableArray * mSubviewInfos;
 	NSArray * mPriorityIndexes;
 	NSMutableDictionary * mViewToCollapseByDivider;
+	
+	AGNSSplitViewEffectiveRectHandler mEffectiveRectHandler;
+	AGNSSplitViewAdditionalEffectiveRectHandler mAdditionalEffectiveRectHandler;
 }
 
 @property (nonatomic, readwrite, retain) NSSplitView * splitView;
 @property (nonatomic, readwrite, assign) AGNSSplitViewResizingStyle resizingStyle;
 @property (nonatomic, readwrite, copy) NSArray * priorityIndexes;
+@property (nonatomic, readwrite, copy) AGNSSplitViewEffectiveRectHandler effectiveRectHandler;
+@property (nonatomic, readwrite, copy) AGNSSplitViewAdditionalEffectiveRectHandler additionalEffectiveRectHandler;
 
 - (id)initWithSplitView:(NSSplitView *)splitView;
 
@@ -49,7 +59,6 @@ typedef NSUInteger AGNSSplitViewResizingStyle;
 
 - (void)setCollapseSubviewAtIndex:(NSUInteger)viewIndex forDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
 - (NSUInteger)subviewIndexToCollapseForDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
-
 
 @end
 
