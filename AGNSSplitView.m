@@ -46,6 +46,7 @@
 - (void)dealloc;
 {
 	[mDividerColor release];
+	[mDividerDrawingHandler release];
 	[super dealloc];
 }
 
@@ -54,6 +55,8 @@
 
 #pragma mark -
 #pragma mark Properties
+
+@synthesize dividerDrawingHandler = mDividerDrawingHandler;
 
 - (void)setDrawsDivider:(BOOL)draws;
 {
@@ -133,19 +136,24 @@
 #pragma mark -
 #pragma mark Drawing
 
-- (void)drawDividerInRect:(NSRect)aRect
+- (void)drawDividerInRect:(NSRect)dividerRect
 {
 	if ([self drawsDivider]) {
 		
+		if (self.dividerDrawingHandler) {
+			self.dividerDrawingHandler(dividerRect);
+			return;
+		}
+		
 		if ([self dividerStyle] == NSSplitViewDividerStyleThin) {
 			[[self dividerColor] set];
-			NSRectFill(aRect);
+			NSRectFill(dividerRect);
 		} else {
 			
 			if ([self drawsDividerHandle]) {
 				NSColor * dividerColor = mDividerColor;
 				mDividerColor = [NSColor clearColor];
-				[super drawDividerInRect:aRect];
+				[super drawDividerInRect:dividerRect];
 				mDividerColor = dividerColor;
 			}
 			
@@ -153,22 +161,22 @@
 			
 			switch (mDividerLineEdge) {
 			case NSMaxYEdge:
-				aRect.origin.y += aRect.size.height - 1.0;
-				aRect.size.height = 1.0;
+				dividerRect.origin.y += dividerRect.size.height - 1.0;
+				dividerRect.size.height = 1.0;
 				break;
 			case NSMinYEdge:
-				aRect.size.height = 1.0;
+				dividerRect.size.height = 1.0;
 				break;
 			case NSMaxXEdge:
-				aRect.origin.x += aRect.size.width - 1.0;
-				aRect.size.width = 1.0;
+				dividerRect.origin.x += dividerRect.size.width - 1.0;
+				dividerRect.size.width = 1.0;
 				break;
 			case NSMinXEdge:
-				aRect.size.width = 1.0;
+				dividerRect.size.width = 1.0;
 				break;
 			}
 			
-			NSRectFill(aRect);
+			NSRectFill(dividerRect);
 		}
 	}
 }
