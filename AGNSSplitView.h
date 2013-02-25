@@ -9,6 +9,8 @@
 #import <Cocoa/Cocoa.h>
 
 
+typedef void (^AGNSSplitViewDividerDrawingHandler)(NSRect dividerRect);
+
 @interface AGNSSplitView : NSSplitView {
 	BOOL mDrawsDivider;
 	BOOL mOverridingThickness;
@@ -16,7 +18,7 @@
 	NSColor * mDividerColor;
 	NSRectEdge mDividerLineEdge;
 	BOOL mDrawsDividerHandle;
-	void (^mDividerDrawingHandler)(NSRect dividerRect);
+	AGNSSplitViewDividerDrawingHandler mDividerDrawingHandler;
 }
 
 @property (readwrite, assign) CGFloat dividerThickness;
@@ -24,8 +26,7 @@
 @property (readwrite, retain) NSColor * dividerColor;
 @property (readwrite, assign) NSRectEdge dividerLineEdge;
 @property (readwrite, assign) BOOL drawsDividerHandle;
-
-@property (readwrite, copy) void (^dividerDrawingHandler)(NSRect dividerRect);
+@property (readwrite, copy) AGNSSplitViewDividerDrawingHandler dividerDrawingHandler;
 
 // add a convenience method for collapsing, uncollapsing
 
