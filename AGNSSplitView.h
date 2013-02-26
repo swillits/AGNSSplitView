@@ -3,7 +3,7 @@
 //  AraeliumAppKit
 //
 //  Created by Seth Willits on 8/20/08.
-//  Copyright 2008 Araelium Group. All rights reserved.
+//  Copyright 2008-2013 Araelium Group. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -21,12 +21,12 @@ typedef void (^AGNSSplitViewDividerDrawingHandler)(NSRect dividerRect);
 	AGNSSplitViewDividerDrawingHandler mDividerDrawingHandler;
 }
 
-@property (readwrite, assign) CGFloat dividerThickness;
-@property (readwrite, assign) BOOL drawsDivider;
-@property (readwrite, retain) NSColor * dividerColor;
-@property (readwrite, assign) NSRectEdge dividerLineEdge;
-@property (readwrite, assign) BOOL drawsDividerHandle;
-@property (readwrite, copy) AGNSSplitViewDividerDrawingHandler dividerDrawingHandler;
+@property (nonatomic, readwrite, assign) CGFloat dividerThickness;
+@property (nonatomic, readwrite, assign) BOOL drawsDivider;
+@property (nonatomic, readwrite, retain) NSColor * dividerColor;
+@property (nonatomic, readwrite, assign) NSRectEdge dividerLineEdge;
+@property (nonatomic, readwrite, assign) BOOL drawsDividerHandle;
+@property (nonatomic, readwrite, copy) AGNSSplitViewDividerDrawingHandler dividerDrawingHandler;
 
 // add a convenience method for collapsing, uncollapsing
 

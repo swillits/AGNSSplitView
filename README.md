@@ -16,6 +16,7 @@ AGNSSplitViewDelegate lets you:
 - Specify min/max sizes for subviews.
 - Specify whether a subview can collapse
 - Specify which subview is collapsed by a double-click on a divider
+- Add a block handler for divider effective rects
 
 Normally to do any of these things you'd have to implement delegate methods yourself 
 (over and over), but now you can just create a generic delegate, call some setters, 
@@ -36,6 +37,7 @@ divider thickness and style with a couple of writable properties.
 - dividerColor;
 - dividerLineEdge;
 - drawsDividerHandle;
+- dividerDrawingHandler;
 
 Nothing major, but here if you want it.
 
@@ -52,7 +54,7 @@ runtimes, does not use garbage collection, and is not ARC-ified yet.
 License
 =============
 
-Copyright (c) 2012, Seth Willits — Araelium Group
+Copyright (c) 2012-2013, Seth Willits — Araelium Group
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this 
 software and associated documentation files (the "Software"), to deal in the Software 
