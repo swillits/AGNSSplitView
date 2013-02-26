@@ -107,6 +107,7 @@
 	mSplitView = [splitView retain];
 	
 	if (mSplitView) {
+		NSAssert([[mSplitView subviews] count] > 0, @"Splitview has no subviews!");
 		for (NSView * subview in mSplitView.subviews) {
 			AGNSSplitViewDelegateSubviewInfo * info = [[[AGNSSplitViewDelegateSubviewInfo alloc] init] autorelease];
 			[mSubviewInfos addObject:info];
