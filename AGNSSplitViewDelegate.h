@@ -3,7 +3,7 @@
 //  AraeliumAppKit
 //
 //  Created by Seth Willits on 6/16/12.
-//  Copyright (c) 2012 Araelium Group. All rights reserved.
+//  Copyright (c) 2012-2013 Araelium Group. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>

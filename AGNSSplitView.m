@@ -3,7 +3,7 @@
 //  AraeliumAppKit
 //
 //  Created by Seth Willits on 8/20/08.
-//  Copyright 2008 Araelium Group. All rights reserved.
+//  Copyright 2008-2013 Araelium Group. All rights reserved.
 //
 
 #import "AGNSSplitView.h"
@@ -29,15 +29,15 @@
 
 - (id)initWithCoder:(NSCoder *)coder;
 {
+	if (!(self = [super initWithCoder:coder])) {
+		return nil;
+	}
+	
 	mDrawsDivider = YES;
 	mDrawsDividerHandle = YES;
 	mDividerThickness = 1.0;
 	mDividerLineEdge = NSMaxYEdge;
 	mDividerColor = [[NSColor colorWithCalibratedWhite:0.6 alpha:1.0] retain];
-	
-	if (!(self = [super initWithCoder:coder])) {
-		return nil;
-	}
 	
 	return self;
 }
@@ -57,17 +57,15 @@
 #pragma mark Properties
 
 @synthesize dividerDrawingHandler = mDividerDrawingHandler;
+@synthesize drawsDivider = mDrawsDivider;
+@synthesize dividerLineEdge = mDividerLineEdge;
+@synthesize drawsDividerHandle = mDrawsDividerHandle;
+
 
 - (void)setDrawsDivider:(BOOL)draws;
 {
 	mDrawsDivider = draws;
-	[self setNeedsDisplay:YES];
-}
-
-
-- (BOOL)drawsDivider;
-{
-	return mDrawsDivider;
+	self.needsDisplay = YES;
 }
 
 
@@ -81,13 +79,7 @@
 
 - (NSColor *)dividerColor;
 {
-	if (!mDividerColor) {
-		if ([super respondsToSelector:@selector(dividerColor)]) {
-			return [super performSelector:@selector(dividerColor)];
-		}
-	}
-	
-	return mDividerColor;
+	return (mDividerColor ? : super.dividerColor);
 }
 
 
@@ -98,37 +90,28 @@
 	[self adjustSubviews];
 }
 
+
 - (CGFloat)dividerThickness;
 {
-	if (!mOverridingThickness) return [super dividerThickness];
-	return mDividerThickness;
+	return (mOverridingThickness ? mDividerThickness : super.dividerThickness);
 }
 
 
 - (void)setDividerLineEdge:(NSRectEdge)edge;
 {
 	mDividerLineEdge = edge;
-	[self setNeedsDisplay:YES];
-}
-
-
-- (NSRectEdge)dividerLineEdge;
-{
-	return mDividerLineEdge;
+	self.needsDisplay = YES;
 }
 
 
 - (void)setDrawsDividerHandle:(BOOL)drawsHandle;
 {
 	mDrawsDividerHandle = drawsHandle;
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 
-- (BOOL)drawsDividerHandle;
-{
-	return mDrawsDividerHandle;
-}
+
 
 
 
@@ -138,46 +121,58 @@
 
 - (void)drawDividerInRect:(NSRect)dividerRect
 {
-	if ([self drawsDivider]) {
+	if (!self.drawsDivider) {
+		return;
+	}
+	
+	if (self.dividerDrawingHandler) {
+		self.dividerDrawingHandler(dividerRect);
+		return;
+	}
+	
+	
+	switch (self.dividerStyle) {
 		
-		if (self.dividerDrawingHandler) {
-			self.dividerDrawingHandler(dividerRect);
-			return;
-		}
-		
-		if ([self dividerStyle] == NSSplitViewDividerStyleThin) {
-			[[self dividerColor] set];
+		// Assuming a 1 point thin divider
+		case NSSplitViewDividerStyleThin:
+			[self.dividerColor set];
 			NSRectFill(dividerRect);
-		} else {
+			break;
+		
+		// The divider is thicker than 1 point, but a separator
+		// line is drawn 1 point wide on the dividerLineEdge.
+		case NSSplitViewDividerStyleThick:
+		case NSSplitViewDividerStylePaneSplitter:
+		default:
 			
-			if ([self drawsDividerHandle]) {
+			if (self.drawsDividerHandle) {
 				NSColor * dividerColor = mDividerColor;
 				mDividerColor = [NSColor clearColor];
 				[super drawDividerInRect:dividerRect];
 				mDividerColor = dividerColor;
 			}
 			
-			[[self dividerColor] set];
+			[self.dividerColor set];
 			
 			switch (mDividerLineEdge) {
-			case NSMaxYEdge:
-				dividerRect.origin.y += dividerRect.size.height - 1.0;
-				dividerRect.size.height = 1.0;
-				break;
-			case NSMinYEdge:
-				dividerRect.size.height = 1.0;
-				break;
-			case NSMaxXEdge:
-				dividerRect.origin.x += dividerRect.size.width - 1.0;
-				dividerRect.size.width = 1.0;
-				break;
-			case NSMinXEdge:
-				dividerRect.size.width = 1.0;
-				break;
+				case NSMaxYEdge:
+					dividerRect.origin.y += dividerRect.size.height - 1.0;
+					dividerRect.size.height = 1.0;
+					break;
+				case NSMinYEdge:
+					dividerRect.size.height = 1.0;
+					break;
+				case NSMaxXEdge:
+					dividerRect.origin.x += dividerRect.size.width - 1.0;
+					dividerRect.size.width = 1.0;
+					break;
+				case NSMinXEdge:
+					dividerRect.size.width = 1.0;
+					break;
 			}
 			
 			NSRectFill(dividerRect);
-		}
+			break;
 	}
 }
 
