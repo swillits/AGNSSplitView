@@ -434,22 +434,60 @@
 		
 		[mSubviewInfos enumerateObjectsUsingBlock:^(AGNSSplitViewDelegateSubviewInfo * info, NSUInteger viewIndex, BOOL *stop) {
 			
+			BOOL canNoLongerResize = NO;
 			CGFloat oldSize = sizes[viewIndex];
 			CGFloat newSize = oldSize;
 			CGFloat subviewDelta = 0.0;
 			
-			// Determine appropriate delta for this subview
-			subviewDelta = round(proportionsForResizableViews[viewIndex] * delta);
-			
-			// Resize it (respecting max/min)
-			newSize += subviewDelta;
-			if (info.minSize > 0) newSize = MAX(info.minSize, newSize);
-			if (info.maxSize > 0) newSize = MIN(info.maxSize, newSize);
-			sizes[viewIndex] = newSize;
-			
-			// Reduce delta
-			deltaRemaining -= (newSize - oldSize);
-			if (fabs(deltaRemaining) <= 0.5) *stop = YES;
+			if (proportionsForResizableViews[viewIndex] > 0.0) {
+				
+				// Determine appropriate delta for this subview
+				subviewDelta = round(proportionsForResizableViews[viewIndex] * delta);
+				
+				// Resize it (respecting max/min)
+				newSize += subviewDelta;
+				if (info.minSize > 0) {
+					
+					// If at min limit and asked to resize smaller, note that we can't resize
+					if (newSize <= info.minSize && delta < 0) {
+						canNoLongerResize = YES;
+					}
+					
+					newSize = MAX(info.minSize, newSize);
+				}
+				
+				if (info.maxSize > 0) {
+					
+					// If at max limit and asked to resize larger, note that we can't resize
+					if (newSize >= info.maxSize && delta > 0) {
+						canNoLongerResize = YES;
+					}
+					
+					newSize = MIN(info.maxSize, newSize);
+				}
+				sizes[viewIndex] = newSize;
+				
+				
+				
+				// Redistribute resize proportion to all other views
+				if (canNoLongerResize) {
+					CGFloat p = proportionsForResizableViews[viewIndex];
+					CGFloat fakeOnePointZero = 1.0 - p;
+					
+					proportionsForResizableViews[viewIndex] = 0.0;
+					
+					for (NSUInteger otherViewIndex = 0; otherViewIndex < mSubviewInfos.count; otherViewIndex++) {
+						if (otherViewIndex != viewIndex) {
+							proportionsForResizableViews[otherViewIndex] += (proportionsForResizableViews[otherViewIndex] / fakeOnePointZero * p);
+						}
+					}
+				}
+				
+				
+				// Reduce delta
+				deltaRemaining -= (newSize - oldSize);
+				if (fabs(deltaRemaining) <= 0.5) *stop = YES;
+			}
 		}];
 		
 		delta = deltaRemaining;
