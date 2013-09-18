@@ -81,6 +81,7 @@
 	[mViewToCollapseByDivider release];
 	[mEffectiveRectHandler release];
 	[mAdditionalEffectiveRectHandler release];
+	[mPriorityIndexes release];
 	[super dealloc];
 }
 
