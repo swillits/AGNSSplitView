@@ -572,27 +572,28 @@
 	NSSize svNewSize = splitView.bounds.size;
 	CGFloat delta = splitView.isVertical ? (svNewSize.width - svOldSize.width) : (svNewSize.height - svOldSize.height);
 	
-	
-	for (NSNumber * viewIndexNumber in self.priorityIndexes) {
-		NSInteger viewIndex = [viewIndexNumber integerValue];
-		NSView * subview = Subview(viewIndex);
-		CGFloat min = SubviewInfo(viewIndex).minSize;
-		CGFloat max = SubviewInfo(viewIndex).maxSize;
-		CGFloat oldSize = (splitView.isVertical ? subview.frame.size.width : subview.frame.size.height);
-		CGFloat newSize = 0;
-		if (max == 0.0) max = CGFLOAT_MAX;
-		
-		if (![splitView isSubviewCollapsed:subview]) {
-			newSize = MAX(min, MIN(max, oldSize + delta));
-			delta -= (newSize - oldSize);
+	do {
+		for (NSNumber * viewIndexNumber in self.priorityIndexes) {
+			NSInteger viewIndex = [viewIndexNumber integerValue];
+			NSView * subview = Subview(viewIndex);
+			CGFloat min = SubviewInfo(viewIndex).minSize;
+			CGFloat max = SubviewInfo(viewIndex).maxSize;
+			CGFloat oldSize = (splitView.isVertical ? subview.frame.size.width : subview.frame.size.height);
+			CGFloat newSize = 0;
+			if (max == 0.0) max = CGFLOAT_MAX;
 			
-			if (splitView.isVertical) {
-				[subview setFrameSize:NSMakeSize(newSize, splitView.bounds.size.height)];
-			} else {
-				[subview setFrameSize:NSMakeSize(splitView.bounds.size.width, newSize)];
+			if (![splitView isSubviewCollapsed:subview]) {
+				newSize = MAX(min, MIN(max, oldSize + delta));
+				delta -= (newSize - oldSize);
+				
+				if (splitView.isVertical) {
+					[subview setFrameSize:NSMakeSize(newSize, splitView.bounds.size.height)];
+				} else {
+					[subview setFrameSize:NSMakeSize(splitView.bounds.size.width, newSize)];
+				}
 			}
 		}
-	}
+	} while (fabs(delta) > 0.1);
 	
 	[self _repositionSubviews];
 }
