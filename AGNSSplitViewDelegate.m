@@ -397,7 +397,8 @@
 				   totalWidth:(CGFloat *)widthOfAllResizableSubviews
 						delta:(CGFloat)delta;
 {
-	[mSubviewInfos enumerateObjectsUsingBlock:^(AGNSSplitViewDelegateSubviewInfo * info, NSUInteger viewIndex, BOOL *stop) {
+	for (NSUInteger viewIndex = 0; viewIndex < self.splitView.subviews.count; viewIndex++) {
+		AGNSSplitViewDelegateSubviewInfo * info = [mSubviewInfos objectAtIndex:viewIndex];
 		NSView * subview = Subview(viewIndex);
 		CGFloat size = (self.splitView.isVertical ? subview.frame.size.width : subview.frame.size.height);
 		BOOL canBeResized = YES;
@@ -426,14 +427,14 @@
 			if (numberOfSubviewsThatCanBeResized) *numberOfSubviewsThatCanBeResized += 1;
 			if (widthOfAllResizableSubviews) *widthOfAllResizableSubviews += size;
 		}
-	}];
+	}
 }
 
 
 
 - (void)_getSubviewsSizes:(CGFloat *)sizes;
 {
-	[mSubviewInfos enumerateObjectsUsingBlock:^(AGNSSplitViewDelegateSubviewInfo * info, NSUInteger viewIndex, BOOL *stop) {
+	for (NSUInteger viewIndex = 0; viewIndex < self.splitView.subviews.count; viewIndex++) {
 		NSView * subview = Subview(viewIndex);
 		
 		if (self.splitView.isVertical) {
@@ -441,7 +442,7 @@
 		} else {
 			sizes[viewIndex] = subview.frame.size.height;
 		}
-	}];
+	}
 }
 
 
@@ -451,7 +452,7 @@
 {
 	NSSplitView * splitView = self.splitView;
 	
-	[mSubviewInfos enumerateObjectsUsingBlock:^(AGNSSplitViewDelegateSubviewInfo * info, NSUInteger viewIndex, BOOL *stop) {
+	for (NSUInteger viewIndex = 0; viewIndex < self.splitView.subviews.count; viewIndex++) {
 		NSView * subview = Subview(viewIndex);
 		
 		if (splitView.isVertical) {
@@ -459,7 +460,7 @@
 		} else {
 			[subview setFrameSize:NSMakeSize(splitView.bounds.size.width, sizes[viewIndex])];
 		}
-	}];
+	}
 	
 	
 	[self _repositionSubviews];
@@ -485,13 +486,13 @@
 	
 	// Get proportions to use for resizing
 	CGFloat * proportionsForResizableViews = calloc(sizeof(CGFloat) * splitView.subviews.count, 1);
-	[mSubviewInfos enumerateObjectsUsingBlock:^(AGNSSplitViewDelegateSubviewInfo * info, NSUInteger viewIndex, BOOL *stop) {
+	for (NSUInteger viewIndex = 0; viewIndex < self.splitView.subviews.count; viewIndex++) {
 		if (resizable[viewIndex]) {
 			NSView * subview = Subview(viewIndex);
 			CGFloat size = (splitView.isVertical ? subview.frame.size.width : subview.frame.size.height);
 			proportionsForResizableViews[viewIndex] = (size / oldWidthOfAllResizableViews);
 		}
-	}];
+	}
 	
 	
 	// Proportionally increment/decrement subview size
@@ -499,7 +500,8 @@
 	while (fabs(delta) > 0.5) {
 		__block CGFloat deltaRemaining = delta;
 		
-		[mSubviewInfos enumerateObjectsUsingBlock:^(AGNSSplitViewDelegateSubviewInfo * info, NSUInteger viewIndex, BOOL *stop) {
+		for (NSUInteger viewIndex = 0; viewIndex < self.splitView.subviews.count; viewIndex++) {
+			AGNSSplitViewDelegateSubviewInfo * info = [mSubviewInfos objectAtIndex:viewIndex];
 			
 			BOOL canNoLongerResize = NO;
 			CGFloat oldSize = sizes[viewIndex];
@@ -543,7 +545,7 @@
 					
 					proportionsForResizableViews[viewIndex] = 0.0;
 					
-					for (NSUInteger otherViewIndex = 0; otherViewIndex < mSubviewInfos.count; otherViewIndex++) {
+					for (NSUInteger otherViewIndex = 0; otherViewIndex < splitView.subviews.count; otherViewIndex++) {
 						if (otherViewIndex != viewIndex) {
 							proportionsForResizableViews[otherViewIndex] += (proportionsForResizableViews[otherViewIndex] / fakeOnePointZero * p);
 						}
@@ -553,9 +555,9 @@
 				
 				// Reduce delta
 				deltaRemaining -= (newSize - oldSize);
-				if (fabs(deltaRemaining) <= 0.5) *stop = YES;
+				if (fabs(deltaRemaining) <= 0.5) break;
 			}
-		}];
+		}
 		
 		delta = deltaRemaining;
 	}
@@ -595,7 +597,8 @@
 		if (deltaPerSubview > 0) deltaPerSubview = ceil(deltaPerSubview);
 		
 		// Resize each of the subviews by a uniform amount (may be off by a teen bit in the last one due to rounding)
-		[mSubviewInfos enumerateObjectsUsingBlock:^(AGNSSplitViewDelegateSubviewInfo * info, NSUInteger viewIndex, BOOL *stop) {
+		for (NSUInteger viewIndex = 0; viewIndex < self.splitView.subviews.count; viewIndex++) {
+			AGNSSplitViewDelegateSubviewInfo * info = [mSubviewInfos objectAtIndex:viewIndex];
 			if (resizable[viewIndex]) {
 				CGFloat oldSize = sizes[viewIndex];
 				CGFloat newSize = oldSize;
@@ -618,9 +621,9 @@
 				
 				
 				delta -= (newSize - oldSize);
-				if (fabs(delta) <= 0.5) *stop = YES;
+				if (fabs(delta) <= 0.5) break;
 			}
-		}];
+		}
 	}
 	
 	
