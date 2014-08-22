@@ -242,34 +242,53 @@
 #pragma mark -
 #pragma mark Delegate Methods
 
-- (CGFloat)splitView:(NSSplitView *)splitView constrainMinCoordinate:(CGFloat)proposedMin ofSubviewAt:(NSInteger)viewIndex;
+- (CGFloat)splitView:(NSSplitView *)splitView constrainMinCoordinate:(CGFloat)proposedMin ofSubviewAt:(NSInteger)dividerIndex;
 {
-	AGNSSplitViewDelegateSubviewInfo * info = SubviewInfo(viewIndex);
-	if (!info.constrainSize) return proposedMin;
+	// Info of the views before and after the divider (left and right, or above and below)
+	AGNSSplitViewDelegateSubviewInfo * beforeInfo = SubviewInfo(dividerIndex);
+	AGNSSplitViewDelegateSubviewInfo * afterInfo = SubviewInfo(dividerIndex + 1);
 	
-	NSRect subviewFrame = Subview(viewIndex).frame;
-	CGFloat frameOrigin;
-	
-	if (splitView.isVertical) {
-		frameOrigin = subviewFrame.origin.x;
-	} else {
-		frameOrigin = subviewFrame.origin.y;
+	if (!beforeInfo.constrainSize && !afterInfo.constrainSize) {
+		return proposedMin;
 	}
 	
-	return frameOrigin + info.minSize;
+	
+	NSView * shrinkingSubview = Subview(dividerIndex);
+	NSView * growingSubview = Subview(dividerIndex + 1);
+	
+	
+	// The minimum divider coordinate which respects...
+	CGFloat beforeMin = 0.0; // ...before's min width
+	CGFloat afterMin = 0.0;  // ... after's max width
+	
+	if (splitView.isVertical) {
+		beforeMin = shrinkingSubview.frame.origin.x + (beforeInfo.constrainSize ? beforeInfo.minSize : 0.0);
+		if (afterInfo.maxSize > 0.0) {
+			afterMin = NSMaxX(growingSubview.frame) - afterInfo.maxSize;
+		}
+	} else {
+		beforeMin = shrinkingSubview.frame.origin.y + (beforeInfo.constrainSize ? beforeInfo.minSize : 0.0);
+		if (afterInfo.maxSize > 0.0) {
+			afterMin = NSMaxY(growingSubview.frame) - afterInfo.maxSize;
+		}
+	}
+	
+	// The MAX of: the before's min width, and the after's max width
+	return MAX(beforeMin, afterMin);
 }
 
 
 
-- (CGFloat)splitView:(NSSplitView *)splitView constrainMaxCoordinate:(CGFloat)proposedMax ofSubviewAt:(NSInteger)viewIndex;
+- (CGFloat)splitView:(NSSplitView *)splitView constrainMaxCoordinate:(CGFloat)proposedMax ofSubviewAt:(NSInteger)dividerIndex;
 {
-	AGNSSplitViewDelegateSubviewInfo * infoTwo = SubviewInfo(viewIndex + 1);
-	AGNSSplitViewDelegateSubviewInfo * infoOne = SubviewInfo(viewIndex);
+	// Info of the views before and after the divider (left and right, or above and below)
+	AGNSSplitViewDelegateSubviewInfo * infoOne = SubviewInfo(dividerIndex);
+	AGNSSplitViewDelegateSubviewInfo * infoTwo = SubviewInfo(dividerIndex + 1);
 	
 	CGFloat shrinkMinSize = infoTwo.minSize;
 	CGFloat growMaxSize = infoOne.maxSize;
-	NSView * growingSubview = Subview(viewIndex);
-	NSView * shrinkingSubview = Subview(viewIndex + 1);
+	NSView * growingSubview = Subview(dividerIndex);
+	NSView * shrinkingSubview = Subview(dividerIndex + 1);
 	CGFloat maxCoordLimitedByShrinkMinSize;
 	CGFloat maxCoordLimitedByGrowMaxSize;
 	
