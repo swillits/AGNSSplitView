@@ -116,19 +116,22 @@
 
 - (void)setSplitView:(NSSplitView *)splitView;
 {
-	if (mSplitView) {
-		[mSubviewInfos removeAllObjects];
-		[mViewToCollapseByDivider removeAllObjects];
-		[mSplitView autorelease];
-		mSplitView = nil;
-	}
-	
-	mSplitView = [splitView retain];
-	
-	if (mSplitView) {
-		for (NSView * subview in mSplitView.subviews) {
-			AGNSSplitViewDelegateSubviewInfo * info = [[[AGNSSplitViewDelegateSubviewInfo alloc] init] autorelease];
-			[mSubviewInfos addObject:info];
+	if (mSplitView != splitView) {
+		if (mSplitView) {
+			[mSubviewInfos removeAllObjects];
+			[mViewToCollapseByDivider removeAllObjects];
+			[mHideDividerOnCollapseByDivider removeAllObjects];
+			[mSplitView autorelease];
+			mSplitView = nil;
+		}
+		
+		mSplitView = [splitView retain];
+		
+		if (mSplitView) {
+			for (NSUInteger i = 0; i < mSplitView.subviews.count; i++) {
+				AGNSSplitViewDelegateSubviewInfo * info = [[[AGNSSplitViewDelegateSubviewInfo alloc] init] autorelease];
+				[mSubviewInfos addObject:info];
+			}
 		}
 	}
 }
