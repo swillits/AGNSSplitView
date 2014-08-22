@@ -640,8 +640,11 @@
 	NSSplitView * splitView = self.splitView;
 	NSSize svNewSize = splitView.bounds.size;
 	CGFloat delta = splitView.isVertical ? (svNewSize.width - svOldSize.width) : (svNewSize.height - svOldSize.height);
+	CGFloat lastDelta;
 	
 	do {
+		lastDelta = delta;
+		
 		for (NSNumber * viewIndexNumber in self.priorityIndexes) {
 			NSInteger viewIndex = [viewIndexNumber integerValue];
 			NSView * subview = Subview(viewIndex);
@@ -661,8 +664,11 @@
 					[subview setFrameSize:NSMakeSize(splitView.bounds.size.width, newSize)];
 				}
 			}
+			
+			if (fabs(delta) <= 0.1) break;
 		}
-	} while (fabs(delta) > 0.1);
+		
+	} while (fabs(delta) > 0.1 && delta	!= lastDelta);
 	
 	[self _repositionSubviews];
 }
