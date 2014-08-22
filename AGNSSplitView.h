@@ -22,9 +22,9 @@
 // 
 
 #import <Cocoa/Cocoa.h>
+@class AGNSSplitView;
 
-
-typedef void (^AGNSSplitViewDividerDrawingHandler)(NSRect dividerRect);
+typedef void (^AGNSSplitViewDividerDrawingHandler)(AGNSSplitView * splitView, NSRect dividerRect);
 
 @interface AGNSSplitView : NSSplitView {
 	BOOL mDrawsDivider;
@@ -36,9 +36,9 @@ typedef void (^AGNSSplitViewDividerDrawingHandler)(NSRect dividerRect);
 	AGNSSplitViewDividerDrawingHandler mDividerDrawingHandler;
 }
 
-@property (nonatomic, readwrite, assign) CGFloat dividerThickness;
+@property (atomic, readwrite, assign) CGFloat dividerThickness;
+@property (atomic, readwrite, copy) NSColor * dividerColor;
 @property (nonatomic, readwrite, assign) BOOL drawsDivider;
-@property (nonatomic, readwrite, retain) NSColor * dividerColor;
 @property (nonatomic, readwrite, assign) NSRectEdge dividerLineEdge;
 @property (nonatomic, readwrite, assign) BOOL drawsDividerHandle;
 @property (nonatomic, readwrite, copy) AGNSSplitViewDividerDrawingHandler dividerDrawingHandler;

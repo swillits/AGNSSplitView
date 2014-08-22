@@ -83,6 +83,7 @@
 	
 	mSubviewInfos = [[NSMutableArray alloc] init];
 	mViewToCollapseByDivider = [[NSMutableDictionary alloc] init];
+	mHideDividerOnCollapseByDivider = [[NSMutableDictionary alloc] init];
 	self.splitView = splitView;
 	
 	return self;
@@ -95,6 +96,7 @@
 	[mSplitView release];
 	[mSubviewInfos release];
 	[mViewToCollapseByDivider release];
+	[mHideDividerOnCollapseByDivider release];
 	[mEffectiveRectHandler release];
 	[mAdditionalEffectiveRectHandler release];
 	[mPriorityIndexes release];
@@ -190,6 +192,25 @@
 - (BOOL)canCollapseSubviewAtIndex:(NSUInteger)viewIndex;
 {
 	return SubviewInfo(viewIndex).canCollapse;
+}
+
+
+
+
+- (void)setHidesDividerAtIndex:(NSUInteger)dividerIndex whenAdjacentSubviewCollapses:(BOOL)hideDivider;
+{
+	[mHideDividerOnCollapseByDivider setObject:[NSNumber numberWithBool:hideDivider] forKey:[NSNumber numberWithUnsignedInteger:dividerIndex]];
+}
+
+
+- (BOOL)hidesDividerWhenAdjacentSubviewCollapses:(NSUInteger)dividerIndex;
+{
+	NSNumber *obj = [mHideDividerOnCollapseByDivider objectForKey:[NSNumber numberWithUnsignedInteger:dividerIndex]];
+	if (obj) {
+		return [obj boolValue];
+	}
+	
+	return NO;
 }
 
 
@@ -299,6 +320,13 @@
 	
 	// Collapse viewIndex if no user setting, or is equal to user setting
 	return ((viewIndexToCollapse == NSNotFound) || (viewIndex == viewIndexToCollapse));
+}
+
+
+
+- (BOOL)splitView:(NSSplitView *)splitView shouldHideDividerAtIndex:(NSInteger)dividerIndex;
+{
+	return [self hidesDividerWhenAdjacentSubviewCollapses:dividerIndex];
 }
 
 
@@ -619,10 +647,14 @@
 - (void)_repositionSubviews;
 {
 	NSSplitView * splitView = self.splitView;
+	NSUInteger subviewIndex = 0;
+	NSUInteger dividerIndex = 0;
 	CGFloat offset = 0;
 	
 	for (NSView * subview in splitView.subviews) {
-		if (![splitView isSubviewCollapsed:subview]) {
+		BOOL subviewIsCollapsed = [splitView isSubviewCollapsed:subview];
+		
+		if (!subviewIsCollapsed) {
 			NSRect viewFrame = subview.frame;
 			
 			if (splitView.isVertical) {
@@ -642,7 +674,18 @@
 		}
 		
 		
-		offset += splitView.dividerThickness;
+		BOOL hidesFollowingDivider = [self hidesDividerWhenAdjacentSubviewCollapses:dividerIndex];
+		BOOL followingSubviewIsCollapsed = ((subviewIndex + 1 < splitView.subviews.count) && [splitView isSubviewCollapsed:[splitView.subviews objectAtIndex:subviewIndex + 1]]);
+		
+		if ((subviewIsCollapsed && hidesFollowingDivider) || (hidesFollowingDivider && followingSubviewIsCollapsed)) {
+			// The divider after this subview is hidden
+		} else {
+			offset += splitView.dividerThickness;
+		}
+		
+		
+		dividerIndex++;
+		subviewIndex++;
 	}
 }
 

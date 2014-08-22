@@ -52,6 +52,7 @@ typedef NSRect (^AGNSSplitViewAdditionalEffectiveRectHandler)(NSInteger dividerI
 	NSMutableArray * mSubviewInfos;
 	NSArray * mPriorityIndexes;
 	NSMutableDictionary * mViewToCollapseByDivider;
+	NSMutableDictionary * mHideDividerOnCollapseByDivider;
 	
 	AGNSSplitViewEffectiveRectHandler mEffectiveRectHandler;
 	AGNSSplitViewAdditionalEffectiveRectHandler mAdditionalEffectiveRectHandler;
@@ -68,10 +69,12 @@ typedef NSRect (^AGNSSplitViewAdditionalEffectiveRectHandler)(NSInteger dividerI
 - (void)setMinSize:(CGFloat)size forSubviewAtIndex:(NSUInteger)viewIndex;
 - (void)setMaxSize:(CGFloat)size forSubviewAtIndex:(NSUInteger)viewIndex;
 - (void)setCanCollapse:(BOOL)canCollapse subviewAtIndex:(NSUInteger)viewIndex;
+- (void)setHidesDividerAtIndex:(NSUInteger)dividerIndex whenAdjacentSubviewCollapses:(BOOL)hideDivider;
 
 - (CGFloat)minSizeForSubviewAtIndex:(NSUInteger)viewIndex;
 - (CGFloat)maxSizeForSubviewAtIndex:(NSUInteger)viewIndex;
 - (BOOL)canCollapseSubviewAtIndex:(NSUInteger)viewIndex;
+- (BOOL)hidesDividerWhenAdjacentSubviewCollapses:(NSUInteger)dividerIndex;
 
 - (void)setCollapseSubviewAtIndex:(NSUInteger)viewIndex forDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;
 - (NSUInteger)subviewIndexToCollapseForDoubleClickOnDividerAtIndex:(NSUInteger)dividerIndex;

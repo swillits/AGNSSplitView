@@ -87,9 +87,8 @@
 
 - (void)setDividerColor:(NSColor *)color;
 {
-	[color retain];
-	[mDividerColor release];
-	mDividerColor = color;
+	[mDividerColor autorelease];
+	mDividerColor = [color copy];
 }
 
 
@@ -142,7 +141,7 @@
 	}
 	
 	if (self.dividerDrawingHandler) {
-		self.dividerDrawingHandler(dividerRect);
+		self.dividerDrawingHandler(self, dividerRect);
 		return;
 	}
 	
