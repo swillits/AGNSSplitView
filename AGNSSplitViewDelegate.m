@@ -3,7 +3,7 @@
 //  AraeliumAppKit
 //
 //  Created by Seth Willits on 6/16/12.
-//  Copyright (c) 2012-2014 Araelium Group. All rights reserved.
+//  Copyright (c) 2012-2015 Araelium Group. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 // and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -307,21 +307,77 @@
 
 
 
-- (void)splitView:(NSSplitView *)splitView resizeSubviewsWithOldSize:(NSSize)oldSize;
+- (void)splitView:(NSSplitView *)splitView resizeSubviewsWithOldSize:(NSSize)svOldSize;
 {
+	if (splitView.subviews.count == 0) {
+		return;
+	}
+	
+	
+	// If the splitview isVertical the dividers are vertical, and the "primary axis" is the X axis.
+	// Make sure the subviews' secondary axis fills the split view so that if the primary axis dimensions
+	// don't need changed, we've still ensured the views are sized correctly.
+	for (NSView * subview in splitView.subviews) {
+		if (splitView.isVertical) {
+			[subview setFrameSize:NSMakeSize(subview.frame.size.width, splitView.bounds.size.height)];
+		} else {
+			[subview setFrameSize:NSMakeSize(splitView.bounds.size.width, subview.frame.size.height)];
+		}
+	}
+	
+	
+	// In the past I assumed that the splitview's subviews were sized to fit svOldSize when this method
+	// was called, but that is not the case. That not being the case would lead to problems. So instead
+	// of using svNewSize - svOldSize to calculate the "delta" (the total amount of space we need to resize
+	// the subviews larger by), we should add up the current space they really do occupy and subtract it
+	// from the current size, and resize by that amount.
+	
+	__block CGFloat oldPrimarySpaceFilled = 0.0;
+	
+	[splitView.subviews enumerateObjectsUsingBlock:^(NSView * subview, NSUInteger idx, BOOL *stop) {
+		BOOL subviewIsCollapsed = [splitView isSubviewCollapsed:subview];
+		
+		if (!subviewIsCollapsed) {
+			if (splitView.isVertical) {
+				oldPrimarySpaceFilled += subview.frame.size.width;
+			} else {
+				oldPrimarySpaceFilled += subview.frame.size.height;
+			}
+			
+			if (idx + 1 < splitView.subviews.count) {
+				oldPrimarySpaceFilled += splitView.dividerThickness;
+			}
+		}
+	}];
+	
+	svOldSize = splitView.isVertical ? NSMakeSize(oldPrimarySpaceFilled, svOldSize.height) : NSMakeSize(svOldSize.width, oldPrimarySpaceFilled);
+	
+	
+	
+	// Now having calcualted the svOldSize which would fit to the existing sizes of the subviews, calculate
+	// the delta to the svNewSize.
+	
 	switch (self.resizingStyle) {
 		case AGNSSplitViewUniformResizingStyle:
-			[self _resizeUniform:oldSize];
+			[self _resizeUniform:svOldSize];
 			break;
 			
 		case AGNSSplitViewProportionalResizingStyle:
-			[self _resizeProportional:oldSize];
+			[self _resizeProportional:svOldSize];
 			break;
 			
 		case AGNSSplitViewPriorityResizingStyle:
-			[self _resizePriority:oldSize];
+			[self _resizePriority:svOldSize];
 			break;
 	}
+	
+//	#if DEBUG
+//	if ([self.splitView respondsToSelector:@selector(_validateSubviewFrames)]) {
+//		if (![self.splitView _validateSubviewFrames]) {
+//			NSBeep();
+//		}
+//	}
+//	#endif
 }
 
 
@@ -640,8 +696,10 @@
 	NSSplitView * splitView = self.splitView;
 	NSSize svNewSize = splitView.bounds.size;
 	CGFloat delta = splitView.isVertical ? (svNewSize.width - svOldSize.width) : (svNewSize.height - svOldSize.height);
-	CGFloat lastDelta;
 	
+	
+	// Resize the primary axis of each subview, using priority, by "delta"
+	CGFloat lastDelta;
 	do {
 		lastDelta = delta;
 		
@@ -670,6 +728,9 @@
 		
 	} while (fabs(delta) > 0.1 && delta	!= lastDelta);
 	
+	
+	
+	// We're now certain the views are *sized* correctly, so now position them correctly
 	[self _repositionSubviews];
 }
 
